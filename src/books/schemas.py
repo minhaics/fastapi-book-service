@@ -1,7 +1,8 @@
 from pydantic import BaseModel
+from uuid import UUID
 
 class Book(BaseModel):
-    id: int
+    uid: UUID
     title: str
     author: str
     publisher: str
@@ -15,7 +16,7 @@ class BookUpdateModel(BaseModel):
     publisher: str
     page_count: int
     language: str
-    
+
 class BookCreateModel(BaseModel):
     """
     This class is used to validate the request when creating or updating a book
