@@ -5,7 +5,6 @@ from datetime import datetime
 
 class Book(SQLModel , table=True):
     __tablename__ = "books"
-            
     uid: uuid.UUID = Field(
         default_factory= uuid.uuid4,
         sa_column= Column(
@@ -24,9 +23,6 @@ class Book(SQLModel , table=True):
     language:str
     created_at: datetime = Field(sa_column=Column(pg.TIMESTAMP, default=datetime.now))
     updated_at:datetime = Field(sa_column=Column(pg.TIMESTAMP, default=datetime.now))
-    
+
     def __repr__(self) -> str:
         return f"<Book {self.title}>"
-    
-    
-    

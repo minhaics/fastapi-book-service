@@ -6,7 +6,7 @@ from sqlmodel import SQLModel
 from src.books.models import Book
 from sqlalchemy.orm import sessionmaker
 from typing import AsyncGenerator
-from sqlalchemy.ext.asyncio.session import AsyncSession
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 print(Config.DATABASE_URL)
 
@@ -21,12 +21,10 @@ async def initdb():
     """create our database models in the database"""
     async with async_engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
-        
+                
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
     Session = sessionmaker(
         bind=async_engine, class_= AsyncSession, expire_on_commit=False
-    )
+    )    
     async with Session() as session:
         yield session
-        
-
