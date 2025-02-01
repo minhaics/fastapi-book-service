@@ -4,6 +4,7 @@ import jwt
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from src.config import Config
+from typing import Optional
 
 passwd_context = CryptContext(schemes=["bcrypt"])
 
@@ -32,7 +33,7 @@ def create_access_token(
     )
     return token
 
-def decode_token(token: str) -> dict:
+def decode_token(token: str) -> Optional[dict]:
     try:
         token_data = jwt.decode(
             jwt=token,

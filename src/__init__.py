@@ -6,8 +6,7 @@ from src.auth.routes import auth_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await initdb()
-    yield
+    yield await initdb()   
     print("server is stopping")
     
 version = "v1"

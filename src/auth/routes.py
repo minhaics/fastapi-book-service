@@ -7,6 +7,7 @@ from .service import UserService
 from src.db.main import get_session
 from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi.exceptions import HTTPException
+from fastapi.security import HTTPBearer
 
 auth_router = APIRouter()
 user_service = UserService()
@@ -43,13 +44,11 @@ async def login_users(
             access_token = create_access_token(
                 user_data={"email": user.email, "user_uid": str(user.uid)}
             )
-            
             refresh_token = create_access_token(
                 user_data={"email": user.email, "user_uid": str(user.uid)},
                 refresh=True,
                 expiry=timedelta(days= REFRESH_TOKEN_EXPIRY),
             )
-            
             return JSONResponse(
                 content= {
                     "message": "Login successful",
