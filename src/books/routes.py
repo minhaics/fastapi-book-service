@@ -6,19 +6,21 @@ from src.books.service import BookService
 from src.db.main import get_session
 from typing import List
 from src.auth.dependencies import AccessTokenBearer
-
+from fastapi.security import HTTPAuthorizationCredentials
+from typing import Optional
 
 book_router = APIRouter()
 book_service = BookService()
-acccess_token_bearer = AccessTokenBearer()
+acccess_token_bearer = AccessTokenBearer(auto_error=False)
 
 
-@book_router.get("/", response_model=List[Book])
+@book_router.get("/", response_model = List[Book])
 async def get_all_books(
     session: AsyncSession = Depends(get_session),
-    token_details=Depends(acccess_token_bearer),
+    token_details: Optional[HTTPAuthorizationCredentials] = Depends(
+        acccess_token_bearer
+    ),
 ):
-    print(token_details)
     books = await book_service.get_all_books(session)
     return books
 
@@ -51,8 +53,7 @@ async def get_book(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Book not found"
         )
-
-
+        
 @book_router.patch("/{book_uid}", response_model=Book)
 async def update_book(
     book_uid: str,
@@ -60,14 +61,12 @@ async def update_book(
     session: AsyncSession = Depends(get_session),
     token_details=Depends(acccess_token_bearer),
 ) -> dict:
-
     updated_book = await book_service.update_book(book_uid, book_update_data, session)
 
     if updated_book is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Book not found"
         )
-
     else:
         return updated_book
 
@@ -85,5 +84,4 @@ async def delete_book(
             status_code=status.HTTP_404_NOT_FOUND, detail="Book not found"
         )
     else:
-
         return {}

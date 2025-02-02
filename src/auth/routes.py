@@ -1,6 +1,7 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, status
 from fastapi.responses import JSONResponse
+from src.auth.dependencies import RefreshTokenBearer
 from src.auth.utils import create_access_token, verify_password
 from .schemas import UserCreateModel, UserModel, UserLoginModel
 from .service import UserService
@@ -20,7 +21,7 @@ async def create_user_account(
 ):
     email = user_data.email
     user_exists = await user_service.user_exists(email, session)
-
+    
     if user_exists:
         raise HTTPException(
             status_code= status.HTTP_403_FORBIDDEN,
@@ -39,14 +40,14 @@ async def login_users(
 
     if user is not None:
         password_valid = verify_password(password, user.password_hash)
-        
+
         if password_valid:
             access_token = create_access_token(
                 user_data={"email": user.email, "user_uid": str(user.uid)}
             )
             refresh_token = create_access_token(
                 user_data={"email": user.email, "user_uid": str(user.uid)},
-                refresh=True,
+                refresh= True,
                 expiry=timedelta(days= REFRESH_TOKEN_EXPIRY),
             )
             return JSONResponse(
@@ -61,4 +62,16 @@ async def login_users(
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN, 
         detail="Invalid Email Or Password"
+    )
+    
+@auth_router.get("/refresh_token")
+async def get_new_access_token(token_details: dict = Depends(RefreshTokenBearer())):
+    expiry_timestamp = token_details["exp"]
+    if datetime.fromtimestamp(expiry_timestamp) > datetime.now():
+        new_access_token = create_access_token(user_data= token_details["user"])
+        return JSONResponse(
+            content={"access_token": new_access_token}
+        )
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid Or expired token"
     )
