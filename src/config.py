@@ -5,6 +5,8 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     JWT_SECRET: str
     JWT_ALGORITHM: str
+    REDIS_HOST: str
+    REDIS_PORT: int
     
     # Tự động làm sạch DATABASE_URL để loại bỏ query string
     def __init__(self, **kwargs):

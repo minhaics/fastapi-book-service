@@ -11,7 +11,7 @@ from typing import Optional
 
 book_router = APIRouter()
 book_service = BookService()
-acccess_token_bearer = AccessTokenBearer(auto_error=False)
+acccess_token_bearer = AccessTokenBearer(auto_error= True)
 
 
 @book_router.get("/", response_model = List[Book])
