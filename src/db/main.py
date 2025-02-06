@@ -3,12 +3,9 @@ from sqlmodel import create_engine, text
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from src.config import Config
 from sqlmodel import SQLModel
-from src.books.models import Book
 from sqlalchemy.orm import sessionmaker
 from typing import AsyncGenerator
 from sqlmodel.ext.asyncio.session import AsyncSession
-
-print(Config.DATABASE_URL)
 
 # Sử dụng create_async_engine cho kết nối async
 async_engine: AsyncEngine = create_async_engine(

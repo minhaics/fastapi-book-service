@@ -1,6 +1,5 @@
 import jwt
 import datetime
-
 SECRET_KEY = "your_secret_key"
 
 payload = {

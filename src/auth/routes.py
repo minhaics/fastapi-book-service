@@ -4,18 +4,19 @@ from fastapi.responses import JSONResponse
 from src.auth.dependencies import AccessTokenBearer, RefreshTokenBearer
 from src.auth.utils import create_access_token, verify_password
 from src.db.redis import add_jti_to_blocklist
-from .schemas import UserCreateModel, UserModel, UserLoginModel
+from .schemas import UserCreateModel, UserModel, UserLoginModel, UserBooksModel
 from .service import UserService
 from src.db.main import get_session
 from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi.exceptions import HTTPException
 from fastapi.security import HTTPBearer
+from .dependencies import AccessTokenBearer, RefreshTokenBearer, get_current_user_in_token, RoleChecker
 
 auth_router = APIRouter()
 user_service = UserService()
+role_checker= RoleChecker(['admin', 'user'])
 
 REFRESH_TOKEN_EXPIRY = 2
-
 
 @auth_router.post(
     "/signup", response_model=UserModel, status_code=status.HTTP_201_CREATED
@@ -34,7 +35,6 @@ async def create_user_account(
     new_user = await user_service.create_user(user_data, session)
     return new_user
 
-
 @auth_router.post("/login")
 async def login_users(
     login_data: UserLoginModel, session: AsyncSession = Depends(get_session)
@@ -48,10 +48,10 @@ async def login_users(
 
         if password_valid:
             access_token = create_access_token(
-                user_data={"email": user.email, "user_uid": str(user.uid)}
+                user_data= {"email": user.email, "user_uid": str(user.uid)}
             )
             refresh_token = create_access_token(
-                user_data={"email": user.email, "user_uid": str(user.uid)},
+                user_data= {"email": user.email, "user_uid": str(user.uid)},
                 refresh=True,
                 expiry=timedelta(days=REFRESH_TOKEN_EXPIRY),
             )
@@ -68,7 +68,6 @@ async def login_users(
         status_code=status.HTTP_403_FORBIDDEN, detail="Invalid Email Or Password"
     )
 
-
 @auth_router.get("/refresh_token")
 async def get_new_access_token(token_details: dict = Depends(RefreshTokenBearer())):
     expiry_timestamp = token_details["exp"]
@@ -79,11 +78,19 @@ async def get_new_access_token(token_details: dict = Depends(RefreshTokenBearer(
         status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid Or expired token"
     )
 
-
 @auth_router.get("/logout")
 async def revoke_token(token_details: dict = Depends(AccessTokenBearer())):
     jti = token_details["jti"]
     await add_jti_to_blocklist(jti)
     return JSONResponse(
-        content={"message": "Logged Out Successfully"}, status_code=status.HTTP_200_OK
+        content= {"message": "Logged Out Successfully"}, 
+        status_code=status.HTTP_200_OK
     )
+
+
+@auth_router.get("/me", response_model=UserBooksModel)
+async def get_current_user(
+    user= Depends(get_current_user_in_token), 
+    _: bool = Depends(role_checker)
+):
+    return user
