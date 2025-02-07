@@ -37,7 +37,6 @@ async def add_tags_to_book(
     tag_data: TagAddModel,
     session: AsyncSession = Depends(get_session),
 ) -> Book:
-
     book_with_tag = await tag_service.add_tags_to_book(
         book_uid= book_uid, tag_data= tag_data, session=session
     )
