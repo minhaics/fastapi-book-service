@@ -4,6 +4,12 @@ class BooklyException(Exception):
     pass
 
 
+class AccountNotVerified(Exception):
+    """Exception raised when the user account is not verified."""
+
+    pass
+
+
 class InvalidToken(BooklyException):
     """User has provided an invalid or expired token"""
 
@@ -79,13 +85,19 @@ from fastapi.responses import JSONResponse
 def create_exception_handler(
     status_code: int, initial_detail: Any
 ) -> Callable[[Request, Exception], JSONResponse]:
-
     async def exception_handler(request: Request, exc: BooklyException):
         return JSONResponse(content= initial_detail, status_code=status_code)
-
     return exception_handler
 
+# src/errors.py
+from fastapi import FastAPI, status
+from fastapi.exceptions import RequestValidationError
+from typing import Any
+from fastapi.responses import JSONResponse
 
+class AccountNotVerified(Exception):
+    """Exception raised when the user account is not verified."""
+    pass
 
 def register_error_handlers(app: FastAPI):
     app.add_exception_handler(
@@ -217,8 +229,20 @@ def register_error_handlers(app: FastAPI):
     async def internal_server_error(request, exc):
         return JSONResponse(
             content={
-                "message": "Oops! Something went wrong",
+                "message": "Oops! Something went wrong cutomize",
                 "error_code": "server_error",
             },
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+        
+    app.add_exception_handler(
+            AccountNotVerified,
+            create_exception_handler(
+                status_code=status.HTTP_403_FORBIDDEN,
+                initial_detail={
+                    "message": "Account Not Verified",
+                    "error_code": "account_not_verified",
+                    "resolution": "Please check your email for verification details"
+                },
+            ),
         )

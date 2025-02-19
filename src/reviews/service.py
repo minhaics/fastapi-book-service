@@ -41,6 +41,9 @@ class ReviewService:
             await session.commit()
             return new_review
         
+        except HTTPException as httpex:
+            raise httpex
+        
         except Exception as e:
             logging.exception(e)
             raise HTTPException(

@@ -11,7 +11,6 @@ tags_router = APIRouter()
 tag_service = TagService()
 user_role_checker = Depends(RoleChecker(["user", "admin"]))
 
-
 @tags_router.get("/", response_model=List[TagModel], dependencies=[user_role_checker])
 async def get_all_tags(session: AsyncSession = Depends(get_session)):
     tags = await tag_service.get_tags(session)
@@ -64,5 +63,4 @@ async def delete_tag(
     tag_uid: str, session: AsyncSession = Depends(get_session)
 ) -> None:
     updated_tag = await tag_service.delete_tag(tag_uid, session)
-
     return updated_tag

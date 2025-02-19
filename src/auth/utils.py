@@ -1,10 +1,13 @@
 import logging
 import uuid
+from fastapi import HTTPException
 import jwt
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from src.config import Config
 from typing import Optional
+from itsdangerous import URLSafeTimedSerializer
+from itsdangerous import SignatureExpired, BadSignature
 
 passwd_context = CryptContext(schemes=["bcrypt"])
 
@@ -49,3 +52,29 @@ def decode_token(token: str) -> Optional[dict]:
     except Exception as e:
         logging.exception(e)
         return None
+
+serializer = URLSafeTimedSerializer(
+    secret_key=Config.JWT_SECRET, salt="email-configuration"
+)
+
+def create_url_safe_token(data: dict) -> str:
+    """
+    Create a URL-safe token with an expiration time.
+    """
+    return serializer.dumps(data)
+
+
+def decode_url_safe_token(token: str, max_age=3600) -> dict:
+    """
+    Decode a URL-safe token and check for expiration.
+    """
+    try:
+        # Deserialize the token and check if it's expired
+        data = serializer.loads(token, max_age=max_age)
+        return data
+    except SignatureExpired:
+        raise HTTPException(status_code=400, detail="Token has expired")
+    except BadSignature:
+        raise HTTPException(status_code=400, detail="Invalid token")
+    
+    
